@@ -7,7 +7,7 @@ function traceResult(req, options){
         rawHeaders: req._header,
         protocol: req.agent.protocol || options.protocol,
         path: options.path,
-        host: req._host,
+        host: req._host || options.hostname || options.host,
         hash: options.hash,
         port: options.port || req.agent.defaultPort,
         query: options.query,
