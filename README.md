@@ -34,16 +34,16 @@ This code will output:
   rawHeaders: 'GET /http-tracer HTTP/1.1\r\nX-Test-Header: Hello world!\r\nHost: registry.npmjs.org\r\nConnection: close\r\n\r\n',
   protocol: 'http:',
   path: '/http-tracer',
-  host: undefined,
+  host: 'registry.npmjs.org',
   hash: undefined,
   port: 80,
   query: undefined,
   search: undefined,
   body: undefined,
-  startedAt: 1446011440210,
-  status: 'success',
+  startedAt: 1446032796034,
   statusCode: 200,
-  elapsedTime: 151 }
+  status: 'success',
+  elapsedTime: 734 }
 ```
 
 ``http-tracer`` is compatible with any module using http.request function (https, got, asker, etc.).
