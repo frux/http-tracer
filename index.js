@@ -44,8 +44,8 @@ exports.enable = function(callback){
 
                     traced = traceResult(req, options);
                     traced.startedAt = requestStartTime;
-                    traced.status = 'success';
                     traced.statusCode = res.statusCode;
+                    traced.status = (traced.statusCode >= 500 ? 'failed' : 'success');
                     traced.elapsedTime = elapsedTime;
 
                     callback(traced);
