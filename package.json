@@ -1,0 +1,31 @@
+{
+  "name": "http-tracer",
+  "version": "0.1.0",
+  "description": "Module for tracing HTTP requests",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frux/http-tracer.git"
+  },
+  "keywords": [
+    "request",
+    "trace",
+    "http",
+    "got",
+    "asker"
+  ],
+  "author": {
+    "name": "Vladimir Kudinov",
+    "email": "qdinov@yandex.ru"
+  },
+  "license": "WTFPL",
+  "bugs": {
+    "url": "https://github.com/frux/http-tracer/issues"
+  },
+  "homepage": "https://github.com/frux/http-tracer#readme"
+}
