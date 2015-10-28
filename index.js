@@ -22,7 +22,7 @@ exports.enable = function(callback){
         http.request = originalRequest;
     };
 
-    if(typeof callback !== 'function'){
+    if(typeof callback === 'function'){
         http.request = function(options, originalCallback){
             var requestStartTime = +new Date,
                 req = originalRequest.call(http, options, function(res){
