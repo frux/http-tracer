@@ -1,4 +1,4 @@
-# http-tracer
+# http-tracer [![Build Status](https://travis-ci.org/frux/http-tracer.svg?branch=master)](https://travis-ci.org/frux/http-tracer)
 Module for tracing of HTTP and HTTPS requests
 
 ## Usage
