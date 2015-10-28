@@ -1,3 +1,5 @@
+var originalRequest;
+
 function traceResult(req, options){
     return {
         method: req.method,
@@ -15,12 +17,17 @@ function traceResult(req, options){
 }
 
 exports.enable = function(callback){
-    var http = require('http'),
-        originalRequest = http.request;
+    var http = require('http');
 
-    exports.disable = function(){
-        http.request = originalRequest;
-    };
+    if(!originalRequest){
+        originalRequest = http.request;
+    }
+
+    if(!exports.disable){
+        exports.disable = function(){
+            http.request = originalRequest;
+        };
+    }
 
     if(typeof callback === 'function'){
         http.request = function(options, originalCallback){
