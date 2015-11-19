@@ -12,7 +12,7 @@ Then just enable ``http-tracer`` and make your requests as usual. Disable tracin
 var httpTracer = require('http-tracer');
 
 httpTracer.enable(function(tracedData){
-    console.log(tracedData);
+    console.log(tracedData.headers);
 });
 
 require('http').request({
@@ -26,7 +26,7 @@ require('http').request({
 httpTracer.disable();
 ```
 
-You can not to provide any callback if you need just to console.log traced data. ``http-tracer`` do it by default.
+You can not to provide any callback if you need just to console.log all of traced data. ``http-tracer`` do it by default.
 
 This code will output:
 
