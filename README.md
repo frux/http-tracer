@@ -26,6 +26,8 @@ require('http').request({
 httpTracer.disable();
 ```
 
+You can not to provide any callback if you need just to console.log traced data. ``http-tracer`` do it by default.
+
 This code will output:
 
 ```js
