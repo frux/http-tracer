@@ -46,18 +46,10 @@ it('Should trace real requests', function(done){
     httpTracer.disable();
 });
 
-it('Shouldn\'t patch request method if callback is not provided', function(){
+it('Should patch request by default callback if callback is not a function', function(){
     var originalRequest = http.request;
 
-    httpTracer.enable();
+    httpTracer.enable('not a function stuff');
 
-    assert.equal(http.request, originalRequest);
-});
-
-it('Shouldn\'t patch request method if callback is not a function', function(){
-    var originalRequest = http.request;
-
-    httpTracer.enable('test');
-
-    assert.equal(http.request, originalRequest);
+    assert.notEqual(http.request, originalRequest);
 });

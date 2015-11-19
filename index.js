@@ -29,44 +29,45 @@ exports.enable = function(callback){
         };
     }
 
-    if(typeof callback === 'function'){
-        http.request = function(options, originalCallback){
-            var requestStartTime = +new Date,
-                req = originalRequest.call(http, options, function(res){
-                    var requestFinishTime = +new Date,
-                        traced;
-
-                    if(typeof originalCallback === 'function'){
-                        originalCallback.call(this, res);
-                    }
-
-                    elapsedTime = requestFinishTime - requestStartTime;
-
-                    traced = traceResult(req, options);
-                    traced.startedAt = requestStartTime;
-                    traced.statusCode = res.statusCode;
-                    traced.status = (traced.statusCode >= 500 ? 'failed' : 'success');
-                    traced.elapsedTime = elapsedTime;
-
-                    callback(traced);
-                }),
-                elapsedTime;
-
-            options = options || {};
-
-            req.on('error', function(e){
+    if(typeof callback !== 'function'){
+        callback = function(tracedData){ console.log(tracedData); };
+    }
+    http.request = function(options, originalCallback){
+        var requestStartTime = +new Date,
+            req = originalRequest.call(http, options, function(res){
                 var requestFinishTime = +new Date,
-                    traced = traceResult(req, options);
+                    traced;
 
+                if(typeof originalCallback === 'function'){
+                    originalCallback.call(this, res);
+                }
+
+                elapsedTime = requestFinishTime - requestStartTime;
+
+                traced = traceResult(req, options);
                 traced.startedAt = requestStartTime;
-                traced.status = 'failed';
-                traced.elapsedTime = requestFinishTime - requestStartTime;
-                traced.error = e;
+                traced.statusCode = res.statusCode;
+                traced.status = (traced.statusCode >= 500 ? 'failed' : 'success');
+                traced.elapsedTime = elapsedTime;
 
                 callback(traced);
-            });
+            }),
+            elapsedTime;
 
-            return req;
-        }
+        options = options || {};
+
+        req.on('error', function(e){
+            var requestFinishTime = +new Date,
+                traced = traceResult(req, options);
+
+            traced.startedAt = requestStartTime;
+            traced.status = 'failed';
+            traced.elapsedTime = requestFinishTime - requestStartTime;
+            traced.error = e;
+
+            callback(traced);
+        });
+
+        return req;
     }
 };
