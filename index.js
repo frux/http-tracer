@@ -1,73 +1,63 @@
-var originalRequest;
+var http = require('http'),
+	chalk = require('chalk'),
+	originalOutReq = http.request,
+	COLORS = {
+		ok: 'green',
+		error: 'red',
+		dot: 'yellow'
+	},
+	SIGNS = {
+		ok: '✓',
+		error: '✘',
+		dot: '●'
+	};
 
-function traceResult(req, options){
-    return {
-        method: req.method,
-        headers: req._headers,
-        rawHeaders: req._header,
-        protocol: req.agent.protocol || options.protocol,
-        path: options.path,
-        host: req._host || options.hostname || options.host,
-        hash: options.hash,
-        port: options.port || req.agent.defaultPort,
-        query: options.query,
-        search: options.search,
-        body: options.body
-    };
+function _defaultOutReqTracing(req){
+	var url = req.agent.protocol + '//' + req._headers.host + req.path,
+		startTime = Number(new Date());
+
+	console.log(chalk.grey('-> ') + req.method + ' ' + url);
+
+	req.on('response', function(res){
+		var logString = url,
+			sign;
+
+		if(res.statusCode >= 300 && res.statusCode < 500){
+			sign = 'dot';
+			if(res.headers.location){
+				logString += chalk.grey(' -> ' + res.headers.location);
+			}
+		}else if(res.statusCode >= 500){
+			sign = 'error';
+		}else{
+			sign = 'ok';
+		}
+
+		logString = chalk[COLORS[sign]](' ' + SIGNS[sign] + ' ' + res.statusCode)  + ' ' + logString + ' ' + chalk.grey(Number(new Date()) - startTime + 'ms');
+
+		console.log(logString);
+	});
 }
 
-exports.enable = function(callback){
-    var http = require('http');
+function enable(callback){
+	var outReqTracing = callback;
 
-    if(!originalRequest){
-        originalRequest = http.request;
-    }
+	if(typeof outReqTracing !== 'function'){
+		outReqTracing = _defaultOutReqTracing;
+	}
 
-    if(!exports.disable){
-        exports.disable = function(){
-            http.request = originalRequest;
-        };
-    }
+	http.request = function(){
+		var req = originalOutReq.apply(this, arguments);
+		outReqTracing(req);
+		return req;
+	};
+}
 
-    if(typeof callback !== 'function'){
-        callback = function(tracedData){ console.log(tracedData); };
-    }
-    http.request = function(options, originalCallback){
-        var requestStartTime = +new Date,
-            req = originalRequest.call(http, options, function(res){
-                var requestFinishTime = +new Date,
-                    traced;
+function disable(){
+	http.request = originalOutReq;
+}
 
-                if(typeof originalCallback === 'function'){
-                    originalCallback.call(this, res);
-                }
-
-                elapsedTime = requestFinishTime - requestStartTime;
-
-                traced = traceResult(req, options);
-                traced.startedAt = requestStartTime;
-                traced.statusCode = res.statusCode;
-                traced.status = (traced.statusCode >= 500 ? 'failed' : 'success');
-                traced.elapsedTime = elapsedTime;
-
-                callback(traced);
-            }),
-            elapsedTime;
-
-        options = options || {};
-
-        req.on('error', function(e){
-            var requestFinishTime = +new Date,
-                traced = traceResult(req, options);
-
-            traced.startedAt = requestStartTime;
-            traced.status = 'failed';
-            traced.elapsedTime = requestFinishTime - requestStartTime;
-            traced.error = e;
-
-            callback(traced);
-        });
-
-        return req;
-    }
+module.exports = {
+	enable: enable,
+	disable: disable
 };
