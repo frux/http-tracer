@@ -28,7 +28,7 @@ Example of script output:
 
 ![http-trace otput](https://habrastorage.org/files/77b/a89/4f8/77ba894f8910455fafe451ee5d48c4d0.png)
 
-Also you able to provide callback funciton to ``.enable()``:
+Also you are able to provide callback funciton to ``.enable()``:
 
 ```js
 httpTracer.enable(function(req){
