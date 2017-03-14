@@ -1,31 +1,38 @@
-var http = require('http'),
-	chalk = require('chalk'),
-	originalOutReq = http.request,
-	COLORS = {
-		ok: 'green',
-		error: 'red',
-		dot: 'yellow'
-	},
-	SIGNS = {
-		ok: '✓',
-		error: '✘',
-		dot: '●'
-	};
+const http = require('http');
+const chalk = require('chalk');
+const originalOutReq = http.request;
+const COLORS = {
+	ok: 'green',
+	error: 'red',
+	dot: 'yellow'
+};
+const SIGNS = {
+	arrow: '->',
+	ok: '✓',
+	error: '✘',
+	dot: '●'
+};
 
-function _defaultOutReqTracing(req){
-	var url = req.agent.protocol + '//' + req._headers.host + req.path,
-		startTime = Number(new Date());
+function getRequestUrl(options) {
+	const protocol = options.protocol || 'http';
+	const host = options.host || options.hostname || 'localhost';
+	return options.href || `${protocol}//${host}${options.path}`;
+}
 
-	console.log(chalk.grey('-> ') + req.method + ' ' + url);
+function _defaultHandleRequest(options, req) {
+	const url = getRequestUrl(options);
+	const startTime = Number(new Date());
 
-	req.on('response', function(res){
-		var logString = url,
-			sign;
+	console.log(`${chalk.grey(`${SIGNS.arrow} ${req.method}`)} ${url}`);
+
+	req.on('response', res => {
+		let log = url;
+		let sign;
 
 		if(res.statusCode >= 300 && res.statusCode < 500){
 			sign = 'dot';
 			if(res.headers.location){
-				logString += chalk.grey(' -> ' + res.headers.location);
+				log += chalk.grey(` ${SIGNS.arrow} ${res.headers.location}`);
 			}
 		}else if(res.statusCode >= 500){
 			sign = 'error';
@@ -33,27 +40,39 @@ function _defaultOutReqTracing(req){
 			sign = 'ok';
 		}
 
-		logString = chalk[COLORS[sign]](' ' + SIGNS[sign] + ' ' + res.statusCode)  + ' ' + logString + ' ' + chalk.grey(Number(new Date()) - startTime + 'ms');
+		const duration = Number(new Date()) - startTime;
+		const prefix = chalk[COLORS[sign]](`${SIGNS[sign]} ${res.statusCode}`);
 
-		console.log(logString);
+		console.log(`${prefix} ${log} ${chalk.grey(`${duration}ms`)}`);
 	});
 }
 
-function enable(callback){
-	var outReqTracing = callback;
+function enable(params, callback) {
+	let handleRequest = callback;
 
-	if(typeof outReqTracing !== 'function'){
-		outReqTracing = _defaultOutReqTracing;
+	params = params || {};
+	params.ignore = params.ignore || [];
+
+	if (typeof callback === 'function') {
+		handleRequest = callback;
+	} else {
+		handleRequest = _defaultHandleRequest;
 	}
 
-	http.request = function(){
-		var req = originalOutReq.apply(this, arguments);
-		outReqTracing(req);
+	http.request = function (options, cb) {
+		const req = originalOutReq.call(this, options, cb);
+		const reqUrl = getRequestUrl(options);
+		for (const ignored of params.ignore) {
+			if (typeof ignored === 'string' && reqUrl === ignored || ignored instanceof RegExp && ignored.test(reqUrl)) {
+				return req;
+			}
+		}
+		handleRequest(options, req);
 		return req;
 	};
 }
 
-function disable(){
+function disable() {
 	http.request = originalOutReq;
 }
 

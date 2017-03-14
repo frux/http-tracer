@@ -1,40 +1,62 @@
-/* globals it */
-var assert = require('assert'),
-	httpTracer = require('../index'),
-	http = require('http');
+const assert = require('assert');
+const got = require('got');
+const test = require('ava');
+const httpTracer = require('../index');
+const http = require('http');
 
-it('Should trace default empty request', function(done){
-	httpTracer.enable(function(req){
-		assert(req instanceof http.ClientRequest);
-		done();
+test('Should trace real requests', t => {
+	httpTracer.enable((options, req) => {
+		t.true(req instanceof http.ClientRequest);
 	});
 
-	http.request().end();
-
-	httpTracer.disable();
-});
-
-it('Should trace real requests', function(done){
-	httpTracer.enable(function(req){
-		assert(req instanceof http.ClientRequest);
-		done();
-	});
-
-	http.request({
-		hostname: 'registry.npmjs.org',
-		path: '/http-tracer',
+	return got('registry.npmjs.org/http-tracer', {
 		headers: {
 			'X-Test-Header': 'Hello NPM!'
 		}
-	}).end();
-
-	httpTracer.disable();
+	})
+		.then(() => httpTracer.disable())
+		.catch(err => console.error(err));
 });
 
-it('Should patch request by default callback if callback is not a function', function(){
+test('Should patch request by default callback if callback is not a function', t => {
 	var originalRequest = http.request;
 
 	httpTracer.enable('not a function stuff');
 
-	assert.notEqual(http.request, originalRequest);
+	t.true(http.request !== originalRequest);
+	httpTracer.disable();
+});
+
+test('Should ignore request (string)', t => {
+	httpTracer.enable({
+		ignore: [
+			'http://registry.npmjs.org/csp-header'
+		]
+	}, (options, req) => {
+		t.false(options.hostname === 'registry.npmjs.org' && options.pathname === '/csp-header');
+	});
+
+	return got('http://registry.npmjs.org/csp-header')
+		.then(() => {
+			return got('registry.npmjs.org/http-tracer')
+				.then(() => httpTracer.disable());
+		})
+		.catch(err => console.error(err));
+});
+
+test('Should ignore request (RegExp)', t => {
+	httpTracer.enable({
+		ignore: [
+			/registry\.npmjs\.org\/csp/
+		]
+	}, (options, req) => {
+		t.false(options.hostname === 'registry.npmjs.org' && options.pathname === '/csp-header');
+	});
+
+	return got('http://registry.npmjs.org/csp-header')
+		.then(() => {
+			return got('registry.npmjs.org/http-tracer')
+				.then(() => httpTracer.disable());
+		})
+		.catch(err => console.error(err));
 });

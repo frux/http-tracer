@@ -9,30 +9,41 @@ Install module via npm:
 Then just enable ``http-tracer`` and make your requests as usual. Disable tracing afterwards if you don't need one.
 
 ```js
-var httpTracer = require('http-tracer');
+const httpTracer = require('http-tracer');
+const got = reuqire('got'); // or any another request library
 
 httpTracer.enable();
 
-require('http').request({
-        hostname: 'registry.npmjs.org',
-        path: '/http-tracer',
-        headers: {
-            'X-Test-Header': 'Hello world!'
-        }
-    }).end();
-
-httpTracer.disable();
+got('http://registry.npmjs.org/http-tracer')
+    .then(() => {
+        httpTracer.disable();
+    });
 ```
 
 Example of script output:
 
 ![http-trace otput](https://habrastorage.org/files/77b/a89/4f8/77ba894f8910455fafe451ee5d48c4d0.png)
 
-Also you are able to provide callback funciton to ``.enable()``:
+## .enable([params, [cb]])
+### ``params.ignore: Array(string|RegExp) = []``
+
+Array of regexps or strings to ignore
 
 ```js
-httpTracer.enable(function(req){
-	console.log(req);
+httpTracer.enable({
+    ignore: [
+        /myhost\.com/,
+        'http://registry.npmjs.org/npm'
+    ]
+});
+```
+
+### ``cb: (options, req) => void = _defaultTraceOutputFunction``
+Function which trace request data. Replaces default output.
+
+```js
+httpTracer.enable({}, (options, req){
+	console.log(`request on ${options.host}!`);
 });
 ```
 
